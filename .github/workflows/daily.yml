@@ -2,8 +2,8 @@ name: HMM Daily Report
 
 on:
   schedule:
-    - cron: '0 7 * * *'  # 7:00 UTC = 9:00 Italia (ora legale)
-  workflow_dispatch:     # Permette di lanciare manualmente il workflow
+    - cron: '0 7 * * *'
+  workflow_dispatch:
 
 jobs:
   send-report:
@@ -21,26 +21,26 @@ jobs:
         run: |
           pip install pandas numpy matplotlib scikit-learn yfinance hmmlearn
 
-      - name: Run HMM script
-        run: python hmm_daily.py
+      - name: Run HMM script and capture output
+        run: |
+          python hmm_daily.py | tee output.log
 
-      - name: Send results to Telegram
+      - name: Send plot and log to Telegram
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
-          # Invio del messaggio di testo
-          TEXT=$(cat message.txt)
-          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage" \
-            -d chat_id=${TELEGRAM_CHAT_ID} \
-            -d parse_mode=Markdown \
-            -d text="$(echo "$TEXT" | tr -d '\000-\037')"
-
-          # Invio del grafico principale
+          # Invio grafico
           if [ -f "hmm_plot.png" ]; then
             curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendPhoto" \
               -F chat_id=${TELEGRAM_CHAT_ID} \
               -F photo=@"hmm_plot.png"
-          else
-            echo "⚠️ File hmm_plot.png non trovato"
+          fi
+
+          # Invio output del terminale
+          if [ -f "output.log" ]; then
+            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendDocument" \
+              -F chat_id=${TELEGRAM_CHAT_ID} \
+              -F document=@"output.log" \
+              -F caption="📄 Output completo del codice"
           fi
