@@ -19,27 +19,14 @@ jobs:
       - name: Run HMM script and capture output
         run: |
           python hmm_daily.py | tee output.log
-      - name: Send plot to Telegram
+      - name: Send plot and log to Telegram
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
-          # Leggi le date dal file
-          if [ -f "report_info.txt" ]; then
-            source report_info.txt
-            CAPTION="📊 HMM Daily Report
-📅 Report generato: ${REPORT_DATE}
-📈 Ultima osservazione: ${LAST_DATA_DATE}"
-          else
-            CAPTION="📊 HMM Daily Report - $(date '+%Y-%m-%d %H:%M:%S')"
-          fi
-          
           # Invio grafico
           if [ -f "hmm_plot.png" ]; then
             curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendPhoto" \
               -F chat_id=${TELEGRAM_CHAT_ID} \
-              -F photo=@"hmm_plot.png" \
-              -F caption="$CAPTION"
-          else
-            echo "⚠️ hmm_plot.png not found"
+              -F photo=@"hmm_plot.png"
           fi
