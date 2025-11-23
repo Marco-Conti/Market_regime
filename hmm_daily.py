@@ -240,6 +240,11 @@ class HiddenMarkovModel:
         plt.savefig('hmm_plot.png', dpi=150, bbox_inches='tight')
         plt.close()
         print("\n✅ Summary plot saved as 'hmm_plot.png'")
+        
+        # Salva le date in un file per il workflow
+        with open('report_info.txt', 'w') as f:
+            f.write(f"LAST_DATA_DATE={self.last_date}\n")
+            f.write(f"REPORT_DATE={datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
 if __name__ == "__main__":
     print("=" * 60)
     print("HMM DAILY REPORT")
