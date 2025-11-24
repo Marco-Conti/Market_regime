@@ -143,12 +143,7 @@ class HiddenMarkovModel:
         print(regime_df.to_string(index=False))
         
     def create_summary_plot(self, fig, timeframe='full'):
-        """Crea un grafico riassuntivo per una pagina del PDF
-        
-        Args:
-            fig: matplotlib figure
-            timeframe: 'full' per tutti i dati, 'last_year' per ultimo anno
-        """
+        """Crea un grafico riassuntivo per una pagina del PDF"""
         from matplotlib.dates import MonthLocator, DateFormatter
         
         gs = fig.add_gridspec(3, 1, hspace=0.35, wspace=0.3, height_ratios=[1.2, 0.8, 1])
@@ -272,7 +267,7 @@ class HiddenMarkovModel:
         
         plt.suptitle(f'HMM Daily Report - {self.symbol_name} {title_suffix}', fontsize=16, fontweight='bold', y=0.98)
 def process_all_tickers():
-    """Processa tutti i ticker e crea un PDF con 2 pagine per ticker (full + last year)"""
+    """Processa tutti i ticker e crea un PDF con 1 pagina per ticker (last year)"""
     
     # Dizionario dei ticker
     tickers = {
@@ -288,8 +283,14 @@ def process_all_tickers():
         "^HSI": "HANG SENG",
     }
     
-    # Crea la cartella di output se non esiste
-    output_dir = os.path.expanduser('~/Desktop/Report HMM')
+    # Crea la cartella di output
+    # Se siamo su GitHub Actions, salviamo nella directory corrente
+    if os.getenv('GITHUB_ACTIONS') == 'true':
+        output_dir = '.'
+    else:
+        # Altrimenti salviamo sul Desktop (locale)
+        output_dir = os.path.expanduser('~/Desktop/Report HMM')
+    
     os.makedirs(output_dir, exist_ok=True)
     
     # Nome del file PDF con data
