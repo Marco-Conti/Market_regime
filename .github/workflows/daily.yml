@@ -19,14 +19,25 @@ jobs:
       - name: Run HMM script and capture output
         run: |
           python hmm_daily.py | tee output.log
-      - name: Send plot and log to Telegram
+      - name: Send PDF report and log to Telegram
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
-          # Invio grafico
-          if [ -f "hmm_plot.png" ]; then
-            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendPhoto" \
+          # Trova il file PDF generato (inizia con HMM_Report_)
+          PDF_FILE=$(find . -maxdepth 1 -name "HMM_Report_*.pdf" | head -n 1)
+          
+          if [ -f "$PDF_FILE" ]; then
+            echo "Sending PDF: $PDF_FILE"
+            # Usa sendDocument per i PDF
+            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendDocument" \
               -F chat_id=${TELEGRAM_CHAT_ID} \
-              -F photo=@"hmm_plot.png"
+              -F document=@"$PDF_FILE" \
+              -F caption="📊 HMM Daily Report - $(date +'%Y-%m-%d')"
+          else
+            echo "Error: PDF report not found!"
+            # Invia notifica di errore
+            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage" \
+              -F chat_id=${TELEGRAM_CHAT_ID} \
+              -F text="❌ Error: HMM Report generation failed. PDF not found."
           fi
